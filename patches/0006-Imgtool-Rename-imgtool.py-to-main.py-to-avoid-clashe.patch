@@ -1,0 +1,18 @@
+From 61e151cb0c70d5c6d7f0edfce484f06ca52e91f3 Mon Sep 17 00:00:00 2001
+From: pennam <m.pennasilico@arduino.cc>
+Date: Mon, 18 Oct 2021 09:40:27 +0200
+Subject: [PATCH] Imgtool: Rename imgtool.py to main.py to avoid clashes while
+ packaging
+
+---
+ scripts/{imgtool.py => main.py} | 0
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ rename scripts/{imgtool.py => main.py} (100%)
+
+diff --git a/scripts/imgtool.py b/scripts/main.py
+similarity index 100%
+rename from scripts/imgtool.py
+rename to scripts/main.py
+-- 
+2.35.1
+

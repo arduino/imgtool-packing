@@ -1,0 +1,22 @@
+From b4220bcf4dc50cf391c526d2a247cd87470e0d06 Mon Sep 17 00:00:00 2001
+From: pennam <m.pennasilico@arduino.cc>
+Date: Mon, 18 Oct 2021 09:41:39 +0200
+Subject: [PATCH] Imgtool: Append _Arduino to version string
+
+---
+ scripts/imgtool/__init__.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/scripts/imgtool/__init__.py b/scripts/imgtool/__init__.py
+index ca43b8d..08967ee 100644
+--- a/scripts/imgtool/__init__.py
++++ b/scripts/imgtool/__init__.py
+@@ -14,4 +14,4 @@
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+ 
+-imgtool_version = "1.8.0"
++imgtool_version = "1.8.0_Arduino"
+-- 
+2.35.1
+

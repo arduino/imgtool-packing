@@ -1,0 +1,10 @@
+diff --git a/scripts/requirements.txt b/scripts/requirements.txt
+index 9481e2c..899a784 100644
+--- a/scripts/requirements.txt
++++ b/scripts/requirements.txt
+@@ -1,4 +1,4 @@
+-cryptography>=2.6
++cryptography<=3.1.1
+ intelhex
+ click
+ cbor>=1.0.0
