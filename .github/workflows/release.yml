@@ -109,16 +109,12 @@ jobs:
         package_platform: [Linux_32bit, Linux_ARMv6, Linux_ARMv7, Linux_ARM64]
         include:
           - package_platform: Linux_32bit
-            qemu_platform: 386
             docker_image: i386/python:3.7-buster
           - package_platform: Linux_ARMv6
-            qemu_platform: arm
             docker_image: arm32v6/python:3.7-alpine3.14 # buster is not available, bash is not installed
           - package_platform: Linux_ARMv7
-            qemu_platform: arm
             docker_image: arm32v7/python:3.7-buster # PyInstaller does not include a pre-compiled bootloader for your platform
           - package_platform: Linux_ARM64
-            qemu_platform: arm64
             docker_image: arm64v8/python:3.7-buster
 
     runs-on: ubuntu-latest
@@ -143,7 +139,7 @@ jobs:
         uses: docker/setup-qemu-action@v1
         with:
           image: tonistiigi/binfmt:latest
-          platforms: ${{ matrix.qemu_platform}}
+          platforms: all
       
       - name: Copy build script
         working-directory: ${{ github.workspace }}/imgtool-packing
