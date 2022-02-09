@@ -110,16 +110,16 @@ jobs:
         include:
           - package_platform: Linux_32bit
             qemu_platform: 386
-            docker_image: i386
+            docker_image: i386/python:3.7-buster
           - package_platform: Linux_ARMv6
-            qemu_platform: arm/v6 #possible?
-            docker_image: arm32v6
+            qemu_platform: arm
+            docker_image: arm32v6/python:3.7-alpine3.14 # buster is not available, bash is not installed
           - package_platform: Linux_ARMv7
-            qemu_platform: arm/v7 #possible?
-            docker_image: arm32v7
+            qemu_platform: arm
+            docker_image: arm32v7/python:3.7-buster # PyInstaller does not include a pre-compiled bootloader for your platform
           - package_platform: Linux_ARM64
             qemu_platform: arm64
-            docker_image: arm64v8
+            docker_image: arm64v8/python:3.7-buster
 
     runs-on: ubuntu-latest
     steps:
@@ -153,11 +153,11 @@ jobs:
       # https://github.com/docker-library/official-images#architectures-other-than-amd64
       - name: ls workspace
         working-directory: ${{ github.workspace }}/mcuboot/scripts
-        run:  docker run -v "$(pwd)":/workspace ${{ matrix.docker_image }}/python:3.7-buster ls workspace
+        run:  docker run -v "$(pwd)":/workspace ${{ matrix.docker_image }} ls workspace
 
       - name: Build
         working-directory: ${{ github.workspace }}/mcuboot/scripts
-        run: docker run -v "$(pwd)":/workspace ${{ matrix.docker_image }}/python:3.7-buster ./workspace/imgtool/build.sh
+        run: docker run -v "$(pwd)":/workspace ${{ matrix.docker_image }} ./workspace/imgtool/build.sh
 
       - name: Package
         working-directory: ${{ github.workspace }}/mcuboot/scripts/imgtool/${{ env.DIST_DIR }}
