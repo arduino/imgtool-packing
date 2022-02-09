@@ -161,7 +161,7 @@ jobs:
 
       - name: Package
         working-directory: ${{ github.workspace }}/mcuboot/scripts/imgtool/${{ env.DIST_DIR }}
-        run: tar cz -C ./ imgtool -C ${{ github.workspace }}/imgtool-packing/ LICENSE.txt -f imgtool_0.0.1_${{ matrix.package_platform }}.tar.gz
+        run: sudo tar cz -C ./ imgtool -C ${{ github.workspace }}/imgtool-packing/ LICENSE.txt -f imgtool_0.0.1_${{ matrix.package_platform }}.tar.gz #dist dir is created in the container with different user/grp
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
