@@ -5,7 +5,7 @@ apt install -y upx
 python -m pip install --upgrade pip setuptools wheel
 cd workspace/imgtool
 pip install -r ../requirements.txt
-pip install pyinstaller
+pip install pyinstaller==4.2
 pyinstaller --onefile main.py -n imgtool
 file dist/imgtool
 ldd dist/imgtool
