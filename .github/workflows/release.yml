@@ -27,8 +27,10 @@ jobs:
             package_platform: Windows_64bit
           - os: ubuntu-latest
             package_platform: Linux_64bit
+            archive_util: tar
           - os: macos-latest
             package_platform: macOS_64bit
+            archive_util: gtar # https://github.com/actions/virtual-environments/issues/2619
     defaults:
       run:
         shell: bash
@@ -91,7 +93,7 @@ jobs:
         run: |
           pyinstaller --onefile main.py -n imgtool
           cd ${{ env.DIST_DIR }}
-          tar cz -C ./ imgtool -C ${{ github.workspace }}/imgtool-packing/ LICENSE.txt -f imgtool_0.0.1_${{ matrix.package_platform }}.tar.gz
+          ${{ matrix.archive_util }} -cz -C ./ imgtool -C ${{ github.workspace }}/imgtool-packing/ LICENSE.txt -f imgtool_0.0.1_${{ matrix.package_platform }}.tar.gz
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
