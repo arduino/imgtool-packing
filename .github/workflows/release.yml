@@ -102,4 +102,72 @@ jobs:
           name: ${{ env.ARTIFACT_NAME }}
           path: mcuboot/scripts/imgtool/dist/imgtool_*
 
+  build-crosscompile:
+    strategy:
+      fail-fast: false #TODO remove, here only 4 developement
+      matrix:
+        package_platform: [Linux_32bit, Linux_ARMv6, Linux_ARMv7, Linux_ARM64]
+        include:
+          - package_platform: Linux_32bit
+            qemu_platform: 386
+            docker_image: i386
+          - package_platform: Linux_ARMv6
+            qemu_platform: arm/v6 #possible?
+            docker_image: arm32v6
+          - package_platform: Linux_ARMv7
+            qemu_platform: arm/v7 #possible?
+            docker_image: arm32v7
+          - package_platform: Linux_ARM64
+            qemu_platform: arm64
+            docker_image: arm64v8
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout mcuboot repository
+        uses: actions/checkout@v2
+        with:
+          repository: mcu-tools/mcuboot
+          path: mcuboot
+          ref: v1.8.0 # the patches apply only to this version
+
+      - name: Checkout imgtool-packing repository
+        uses: actions/checkout@v2
+        with:
+          path: imgtool-packing
+
+      - name: Apply patches
+        working-directory: ${{ github.workspace }}/mcuboot/scripts/
+        run: git apply -v ../../imgtool-packing/patches/*
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        with:
+          image: tonistiigi/binfmt:latest
+          platforms: ${{ matrix.qemu_platform}}
+      
+      - name: Copy build script
+        working-directory: ${{ github.workspace }}/imgtool-packing
+        run: cp build.sh ${{ github.workspace }}/mcuboot/scripts/imgtool/
+
+      # Docker containers used to crosscompile:
+      # https://github.com/docker-library/official-images#architectures-other-than-amd64
+      - name: ls workspace
+        working-directory: ${{ github.workspace }}/mcuboot/scripts
+        run:  docker run -v ./:/workspace ${{ matrix.docker_image }}/python:3.7-buster "ls -lah workspace/"
+
+      - name: Build
+        working-directory: ${{ github.workspace }}/mcuboot/scripts
+        run: docker run -v ./:/workspace ${{ matrix.docker_image }}/python:3.7-buster ./workspace/imgtool/build.sh
+
+      - name: Package
+        working-directory: ${{ github.workspace }}/mcuboot/scripts/imgtool/${{ env.DIST_DIR }}
+        run: tar cz -C ./ imgtool -C ${{ github.workspace }}/imgtool-packing/ LICENSE.txt -f imgtool_0.0.1_${{ matrix.package_platform }}.tar.gz
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          if-no-files-found: error
+          name: ${{ env.ARTIFACT_NAME }}
+          path: mcuboot/scripts/imgtool/dist/imgtool_*
+
       # NOTARIZATION & RELEASE
