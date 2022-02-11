@@ -1,0 +1,103 @@
+name: Release
+
+env:
+  DIST_DIR: dist
+  # AWS_PLUGIN_TARGET: #TODO
+  ARTIFACT_NAME: dist
+    # See: https://github.com/actions/setup-python/tree/v2#available-versions-of-python
+  PYTHON_VERSION: "3.7"
+
+on:
+  push:
+    # tags:
+    #   - "[0-9]+.[0-9]+.[0-9]+*" # enable it at the end of developement
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false #TODO remove, here only 4 developement
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        python_arch: [x64]
+        include:
+          - os: windows-latest
+            package_platform: Windows_32bit
+            python_arch: x86
+          - os: windows-latest
+            package_platform: Windows_64bit
+          - os: ubuntu-latest
+            package_platform: Linux_64bit
+          - os: macos-latest
+            package_platform: macOS_64bit
+    defaults:
+      run:
+        shell: bash
+  
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout mcuboot repository
+        uses: actions/checkout@v2
+        with:
+          repository: mcu-tools/mcuboot
+          path: mcuboot
+          ref: v1.8.0 # the patches apply only to this version
+
+      - name: Checkout imgtool-packing repository
+        uses: actions/checkout@v2
+        with:
+          path: imgtool-packing
+
+      - name: Apply patches
+        working-directory: ${{ github.workspace }}/mcuboot/scripts/
+        run: git apply -v ../../imgtool-packing/patches/* #apparently windows does not expand correclty ${{ github.workspace }} for some obscure reason 
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          architecture: ${{ matrix.python_arch }}
+
+      - name: Upgrade PIP
+        run: python -m pip install --upgrade pip setuptools wheel
+
+      # - name: Display Python version
+      #   run: python --version
+
+      - name: Display PIP version
+        run: pip --version
+
+      - name: Install python dependencies
+        working-directory: ${{ github.workspace }}/mcuboot/scripts/
+        run: pip install -r requirements.txt
+
+      - name: Install pyinstaller
+        run: pip install pyinstaller
+
+      # - name: Display Pyinstaller version 
+      #   run: pyinstaller --version
+
+      - name: Build & Package
+        if: matrix.os == 'windows-latest'
+        working-directory: ${{ github.workspace }}/mcuboot/scripts/imgtool
+        run: |
+          pyinstaller --onefile main.py -n imgtool.exe
+          cd ${{ env.DIST_DIR }}
+          7z a imgtool_0.0.1_${{ matrix.package_platform }}.zip imgtool.exe ../../../../imgtool-packing/LICENSE.txt #apparently windows does not expand correclty ${{ github.workspace }} for some obscure reason 
+
+      - name: Build & Package
+        if: matrix.os != 'windows-latest'
+        working-directory: ${{ github.workspace }}/mcuboot/scripts/imgtool
+        run: |
+          pyinstaller --onefile main.py -n imgtool
+          cd ${{ env.DIST_DIR }}
+          tar cz -C ./ imgtool -C ${{ github.workspace }}/imgtool-packing/ LICENSE.txt -f imgtool_0.0.1_${{ matrix.package_platform }}.tar.gz
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          if-no-files-found: error
+          name: ${{ env.ARTIFACT_NAME }}
+          path: mcuboot/scripts/imgtool/dist/imgtool_*
+
+      # NOTARIZATION & RELEASE
