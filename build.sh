@@ -11,3 +11,4 @@ uname -m
 pyinstaller --onefile main.py -n imgtool
 file dist/imgtool
 ldd dist/imgtool
+./dist/imgtool
