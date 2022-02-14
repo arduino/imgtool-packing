@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false #TODO remove, here only 4 developement
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-latest, ubuntu-18.04, macos-10.15]
         python_arch: [x64]
         include:
           - os: windows-latest
@@ -25,10 +25,10 @@ jobs:
             python_arch: x86
           - os: windows-latest
             package_platform: Windows_64bit
-          - os: ubuntu-latest
+          - os: ubuntu-18.04
             package_platform: Linux_64bit
             archive_util: tar
-          - os: macos-latest
+          - os: macos-10.15
             package_platform: macOS_64bit
             archive_util: gtar # https://github.com/actions/virtual-environments/issues/2619
     defaults:
