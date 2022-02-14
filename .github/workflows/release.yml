@@ -1,6 +1,7 @@
 name: Release
 
 env:
+  PROJECT_NAME: imgtool
   DIST_DIR: dist
   # AWS_PLUGIN_TARGET: #TODO
   ARTIFACT_NAME: dist
@@ -83,24 +84,24 @@ jobs:
         if: matrix.os == 'windows-latest'
         working-directory: ${{ github.workspace }}/mcuboot/scripts/
         run: |
-          pyinstaller --onefile main.py -n imgtool.exe
+          pyinstaller --onefile main.py -n ${{ env.PROJECT_NAME }}.exe
           cd ${{ env.DIST_DIR }}
-          7z a imgtool_0.0.1_${{ matrix.package_platform }}.zip imgtool.exe ../../../imgtool-packing/LICENSE.txt #apparently windows does not expand correclty ${{ github.workspace }} for some obscure reason 
+          7z a ${{ env.PROJECT_NAME }}_0.0.1_${{ matrix.package_platform }}.zip ${{ env.PROJECT_NAME }}.exe ../../../imgtool-packing/LICENSE.txt #apparently windows does not expand correclty ${{ github.workspace }} for some obscure reason 
 
       - name: Build & Package
         if: matrix.os != 'windows-latest'
         working-directory: ${{ github.workspace }}/mcuboot/scripts/
         run: |
-          pyinstaller --onefile main.py -n imgtool
+          pyinstaller --onefile main.py -n ${{ env.PROJECT_NAME }}
           cd ${{ env.DIST_DIR }}
-          ${{ matrix.archive_util }} -cz -C ./ imgtool -C ${{ github.workspace }}/imgtool-packing/ LICENSE.txt -f imgtool_0.0.1_${{ matrix.package_platform }}.tar.gz
+          ${{ matrix.archive_util }} -cz -C ./ ${{ env.PROJECT_NAME }} -C ${{ github.workspace }}/imgtool-packing/ LICENSE.txt -f ${{ env.PROJECT_NAME }}_0.0.1_${{ matrix.package_platform }}.tar.gz
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           if-no-files-found: error
           name: ${{ env.ARTIFACT_NAME }}
-          path: mcuboot/scripts/dist/imgtool_*
+          path: mcuboot/scripts/dist/${{ env.PROJECT_NAME }}_*
 
   build-crosscompile:
     strategy:
@@ -157,13 +158,13 @@ jobs:
 
       - name: Package
         working-directory: ${{ github.workspace }}/mcuboot/scripts/${{ env.DIST_DIR }}
-        run: sudo tar cz -C ./ imgtool -C ${{ github.workspace }}/imgtool-packing/ LICENSE.txt -f imgtool_0.0.1_${{ matrix.package_platform }}.tar.gz #dist dir is created in the container with different user/grp
+        run: sudo tar cz -C ./ ${{ env.PROJECT_NAME }} -C ${{ github.workspace }}/imgtool-packing/ LICENSE.txt -f imgtool_0.0.1_${{ matrix.package_platform }}.tar.gz #dist dir is created in the container with different user/grp
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           if-no-files-found: error
           name: ${{ env.ARTIFACT_NAME }}
-          path: mcuboot/scripts/dist/imgtool_*
+          path: mcuboot/scripts/dist/${{ env.PROJECT_NAME }}_*
 
       # NOTARIZATION & RELEASE
