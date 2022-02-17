@@ -7,7 +7,7 @@ env:
   ARTIFACT_NAME: dist
   # The project's folder on Arduino's download server for uploading builds
   AWS_PLUGIN_TARGET: /tools/
-    # See: https://github.com/actions/setup-python/tree/v2#available-versions-of-python
+  # See: https://github.com/actions/setup-python/tree/v2#available-versions-of-python
   PYTHON_VERSION: "3.7"
 
 on:
@@ -55,7 +55,7 @@ jobs:
 
       - name: Apply patches
         working-directory: ${{ github.workspace }}/mcuboot/scripts/
-        run: git apply -v ../../imgtool-packing/patches/* #apparently windows does not expand correclty ${{ github.workspace }} for some obscure reason 
+        run: git apply -v "${{ github.workspace }}/imgtool-packing/patches/"*
 
       - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v2
@@ -66,9 +66,6 @@ jobs:
       - name: Upgrade PIP
         run: python -m pip install --upgrade pip setuptools wheel
 
-      - name: Display PIP version
-        run: pip --version
-
       - name: Install python dependencies
         working-directory: ${{ github.workspace }}/mcuboot/scripts/
         run: pip install -r requirements.txt
@@ -76,21 +73,19 @@ jobs:
       - name: Install pyinstaller
         run: pip install pyinstaller
 
-      - name: Build & Package
-        if: matrix.os == 'windows-latest'
+      - name: Build
         working-directory: ${{ github.workspace }}/mcuboot/scripts/
-        run: |
-          pyinstaller --onefile main.py -n ${{ env.PROJECT_NAME }}.exe
-          cd ${{ env.DIST_DIR }}
-          7z a ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.zip ${{ env.PROJECT_NAME }}.exe ../../../imgtool-packing/LICENSE.txt #apparently windows does not expand correclty ${{ github.workspace }} for some obscure reason 
+        run: pyinstaller --onefile main.py -n ${{ env.PROJECT_NAME }}
 
-      - name: Build & Package
+      - name: Package
+        if: matrix.os == 'windows-latest'
+        working-directory: ${{ github.workspace }}/mcuboot/scripts/${{ env.DIST_DIR }}
+        run: 7z a ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.zip ${{ env.PROJECT_NAME }}.exe "${{ github.workspace }}/imgtool-packing/LICENSE.txt"
+          
+      - name: Package
         if: matrix.os != 'windows-latest'
-        working-directory: ${{ github.workspace }}/mcuboot/scripts/
-        run: |
-          pyinstaller --onefile main.py -n ${{ env.PROJECT_NAME }}
-          cd ${{ env.DIST_DIR }}
-          ${{ matrix.archive_util }} -cz -C ./ ${{ env.PROJECT_NAME }} -C ${{ github.workspace }}/imgtool-packing/ LICENSE.txt -f ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.tar.gz
+        working-directory: ${{ github.workspace }}/mcuboot/scripts/${{ env.DIST_DIR }}
+        run: ${{ matrix.archive_util }} -cz -C ./ ${{ env.PROJECT_NAME }} -C ${{ github.workspace }}/imgtool-packing/ LICENSE.txt -f ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.tar.gz
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
@@ -130,7 +125,7 @@ jobs:
 
       - name: Apply patches
         working-directory: ${{ github.workspace }}/mcuboot/scripts/
-        run: git apply -v ../../imgtool-packing/patches/*
+        run: git apply -v "${{ github.workspace }}/imgtool-packing/patches/"*
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -150,7 +145,7 @@ jobs:
 
       - name: Package
         working-directory: ${{ github.workspace }}/mcuboot/scripts/${{ env.DIST_DIR }}
-        run: sudo tar cz -C ./ ${{ env.PROJECT_NAME }} -C ${{ github.workspace }}/imgtool-packing/ LICENSE.txt -f imgtool_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.tar.gz #dist dir is created in the container with different user/grp
+        run: sudo tar -cz -C ./ ${{ env.PROJECT_NAME }} -C ${{ github.workspace }}/imgtool-packing/ LICENSE.txt -f ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.tar.gz #dist dir is created in the container with different user/grp
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
@@ -175,8 +170,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: false
-          # NOTE: "Artifact is a directory" warnings are expected and don't indicate a problem
-          # (all the files we need are in the DIST_DIR root)
           artifacts: ${{ env.DIST_DIR }}/*
 
       - name: Upload release files on Arduino downloads servers

@@ -1,6 +1,6 @@
 # imgtool-packing
 
-This repo des not contain the source code, but only the patches, and the release workflow
+This repo does not contain the source code, but only the patches, and the release workflow
 
 ## Sources
 The sources can be found in the [official repo](https://github.com/mcu-tools/mcuboot/tree/main/scripts)
