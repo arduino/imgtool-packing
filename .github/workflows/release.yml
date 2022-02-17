@@ -143,6 +143,10 @@ jobs:
         working-directory: ${{ github.workspace }}/mcuboot/scripts
         run: docker run -v "$(pwd)":/workspace ${{ matrix.docker_image }} ./workspace/imgtool/build.sh
 
+      - name: Smoke test build
+        working-directory: ${{ github.workspace }}/mcuboot/scripts
+        run: docker run -v "$(pwd)":/workspace ${{ matrix.docker_image }} ./workspace/dist/imgtool
+        
       - name: Package
         working-directory: ${{ github.workspace }}/mcuboot/scripts/${{ env.DIST_DIR }}
         run: sudo tar -cz -C ./ ${{ env.PROJECT_NAME }} -C ${{ github.workspace }}/imgtool-packing/ LICENSE.txt -f ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.tar.gz #dist dir is created in the container with different user/grp
