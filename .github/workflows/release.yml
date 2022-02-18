@@ -9,6 +9,9 @@ env:
   AWS_PLUGIN_TARGET: /tools/
   # See: https://github.com/actions/setup-python/tree/v2#available-versions-of-python
   PYTHON_VERSION: "3.7"
+  MCUBOOT_PATH: ${{ github.workspace }}/mcuboot
+  IMGTOOL_PACKING_PATH: ${{ github.workspace }}/imgtool-packing
+
 
 on:
   push:
@@ -45,17 +48,17 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: mcu-tools/mcuboot
-          path: mcuboot
+          path: ${{ env.MCUBOOT_PATH }}
           ref: v1.8.0 # the patches apply only to this version
 
       - name: Checkout imgtool-packing repository
         uses: actions/checkout@v2
         with:
-          path: imgtool-packing
+          path: ${{ env.IMGTOOL_PACKING_PATH }}
 
       - name: Apply patches
-        working-directory: ${{ github.workspace }}/mcuboot/scripts/
-        run: git apply -v "${{ github.workspace }}/imgtool-packing/patches/"*
+        working-directory: ${{ env.MCUBOOT_PATH }}/scripts/
+        run: git apply -v "${{ env.IMGTOOL_PACKING_PATH }}/patches/"*
 
       - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v2
@@ -67,32 +70,33 @@ jobs:
         run: python -m pip install --upgrade pip setuptools wheel
 
       - name: Install python dependencies
-        working-directory: ${{ github.workspace }}/mcuboot/scripts/
+        working-directory: ${{ env.MCUBOOT_PATH }}/scripts/
         run: pip install -r requirements.txt
 
       - name: Install pyinstaller
         run: pip install pyinstaller
 
       - name: Build
-        working-directory: ${{ github.workspace }}/mcuboot/scripts/
+        working-directory: ${{ env.MCUBOOT_PATH }}/scripts/
         run: pyinstaller --onefile main.py -n ${{ env.PROJECT_NAME }}
 
       - name: Package
         if: matrix.os == 'windows-latest'
-        working-directory: ${{ github.workspace }}/mcuboot/scripts/${{ env.DIST_DIR }}
-        run: 7z a ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.zip ${{ env.PROJECT_NAME }}.exe "${{ github.workspace }}/imgtool-packing/LICENSE.txt"
+
+        working-directory: ${{ env.MCUBOOT_PATH }}/scripts/${{ env.DIST_DIR }}
+        run: 7z a ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.zip ${{ env.PROJECT_NAME }}.exe "${{ env.IMGTOOL_PACKING_PATH }}/LICENSE.txt"
           
       - name: Package
         if: matrix.os != 'windows-latest'
-        working-directory: ${{ github.workspace }}/mcuboot/scripts/${{ env.DIST_DIR }}
-        run: ${{ matrix.archive_util }} -cz -C ./ ${{ env.PROJECT_NAME }} -C ${{ github.workspace }}/imgtool-packing/ LICENSE.txt -f ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.tar.gz
+        working-directory: ${{ env.MCUBOOT_PATH }}/scripts/${{ env.DIST_DIR }}
+        run: ${{ matrix.archive_util }} -cz -C ./ ${{ env.PROJECT_NAME }} -C ${{ env.IMGTOOL_PACKING_PATH }} LICENSE.txt -f ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.tar.gz
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           if-no-files-found: error
           name: ${{ env.ARTIFACT_NAME }}
-          path: mcuboot/scripts/dist/${{ env.PROJECT_NAME }}_*
+          path: ${{ env.MCUBOOT_PATH }}/scripts/dist/${{ env.PROJECT_NAME }}_*
 
   build-crosscompile:
     name: build (${{ matrix.package_platform }})
@@ -115,17 +119,17 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: mcu-tools/mcuboot
-          path: mcuboot
+          path: ${{ env.MCUBOOT_PATH }}
           ref: v1.8.0 # the patches apply only to this version
 
       - name: Checkout imgtool-packing repository
         uses: actions/checkout@v2
         with:
-          path: imgtool-packing
+          path: ${{ env.IMGTOOL_PACKING_PATH }}
 
       - name: Apply patches
-        working-directory: ${{ github.workspace }}/mcuboot/scripts/
-        run: git apply -v "${{ github.workspace }}/imgtool-packing/patches/"*
+        working-directory: ${{ env.MCUBOOT_PATH }}/scripts/
+        run: git apply -v "${{ env.IMGTOOL_PACKING_PATH }}/patches/"*
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -134,29 +138,29 @@ jobs:
           platforms: all
       
       - name: Copy build script
-        working-directory: ${{ github.workspace }}/imgtool-packing
-        run: cp build.sh ${{ github.workspace }}/mcuboot/scripts/imgtool/
+        working-directory: ${{ env.IMGTOOL_PACKING_PATH }}
+        run: cp build.sh ${{ env.MCUBOOT_PATH }}/scripts/imgtool/
 
       # Docker containers used to crosscompile:
       # https://github.com/docker-library/official-images#architectures-other-than-amd64
       - name: Build
-        working-directory: ${{ github.workspace }}/mcuboot/scripts
+        working-directory: ${{ env.MCUBOOT_PATH }}/scripts
         run: docker run -v "$(pwd)":/workspace ${{ matrix.docker_image }} ./workspace/imgtool/build.sh
 
       - name: Smoke test build
-        working-directory: ${{ github.workspace }}/mcuboot/scripts
+        working-directory: ${{ env.MCUBOOT_PATH }}/scripts
         run: docker run -v "$(pwd)":/workspace ${{ matrix.docker_image }} ./workspace/dist/imgtool
-        
+
       - name: Package
-        working-directory: ${{ github.workspace }}/mcuboot/scripts/${{ env.DIST_DIR }}
-        run: sudo tar -cz -C ./ ${{ env.PROJECT_NAME }} -C ${{ github.workspace }}/imgtool-packing/ LICENSE.txt -f ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.tar.gz #dist dir is created in the container with different user/grp
+        working-directory: ${{ env.MCUBOOT_PATH }}/scripts/${{ env.DIST_DIR }}
+        run: sudo tar -cz -C ./ ${{ env.PROJECT_NAME }} -C ${{ env.IMGTOOL_PACKING_PATH }} LICENSE.txt -f ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.tar.gz #dist dir is created in the container with different user/grp
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           if-no-files-found: error
           name: ${{ env.ARTIFACT_NAME }}
-          path: mcuboot/scripts/dist/${{ env.PROJECT_NAME }}_*
+          path: ${{ env.MCUBOOT_PATH }}/scripts/dist/${{ env.PROJECT_NAME }}_*
 
   create-release:
     runs-on: ubuntu-latest
