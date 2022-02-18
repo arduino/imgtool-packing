@@ -1,0 +1,191 @@
+name: Release
+
+env:
+  # The name of the project
+  PROJECT_NAME: imgtool
+  DIST_DIR: dist
+  ARTIFACT_NAME: dist
+  # The project's folder on Arduino's download server for uploading builds
+  AWS_PLUGIN_TARGET: /tools/
+  # See: https://github.com/actions/setup-python/tree/v2#available-versions-of-python
+  PYTHON_VERSION: "3.7"
+  MCUBOOT_PATH: ${{ github.workspace }}/mcuboot
+  IMGTOOL_PACKING_PATH: ${{ github.workspace }}/imgtool-packing
+
+
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+*"
+
+jobs:
+  build:
+    name: build (${{ matrix.package_platform }})
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-18.04, macos-10.15]
+        python_arch: [x64]
+        include:
+          - os: windows-latest
+            package_platform: Windows_32bit
+            python_arch: x86
+          - os: windows-latest
+            package_platform: Windows_64bit
+          - os: ubuntu-18.04
+            package_platform: Linux_64bit
+            archive_util: tar
+          - os: macos-10.15
+            package_platform: macOS_64bit
+            archive_util: gtar # https://github.com/actions/virtual-environments/issues/2619
+    defaults:
+      run:
+        shell: bash
+  
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout mcuboot repository
+        uses: actions/checkout@v2
+        with:
+          repository: mcu-tools/mcuboot
+          path: ${{ env.MCUBOOT_PATH }}
+          ref: v1.8.0 # the patches apply only to this version
+
+      - name: Checkout imgtool-packing repository
+        uses: actions/checkout@v2
+        with:
+          path: ${{ env.IMGTOOL_PACKING_PATH }}
+
+      - name: Apply patches
+        working-directory: ${{ env.MCUBOOT_PATH }}/scripts/
+        run: git apply -v "${{ env.IMGTOOL_PACKING_PATH }}/patches/"*
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          architecture: ${{ matrix.python_arch }}
+
+      - name: Upgrade PIP
+        run: python -m pip install --upgrade pip setuptools wheel
+
+      - name: Install python dependencies
+        working-directory: ${{ env.MCUBOOT_PATH }}/scripts/
+        run: pip install -r requirements.txt
+
+      - name: Install pyinstaller
+        run: pip install pyinstaller
+
+      - name: Build
+        working-directory: ${{ env.MCUBOOT_PATH }}/scripts/
+        run: pyinstaller --onefile main.py -n ${{ env.PROJECT_NAME }}
+
+      - name: Package
+        if: matrix.os == 'windows-latest'
+
+        working-directory: ${{ env.MCUBOOT_PATH }}/scripts/${{ env.DIST_DIR }}
+        run: 7z a ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.zip ${{ env.PROJECT_NAME }}.exe "${{ env.IMGTOOL_PACKING_PATH }}/LICENSE.txt"
+          
+      - name: Package
+        if: matrix.os != 'windows-latest'
+        working-directory: ${{ env.MCUBOOT_PATH }}/scripts/${{ env.DIST_DIR }}
+        run: ${{ matrix.archive_util }} -cz -C ./ ${{ env.PROJECT_NAME }} -C ${{ env.IMGTOOL_PACKING_PATH }} LICENSE.txt -f ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.tar.gz
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          if-no-files-found: error
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.MCUBOOT_PATH }}/scripts/dist/${{ env.PROJECT_NAME }}_*
+
+  build-crosscompile:
+    name: build (${{ matrix.package_platform }})
+    strategy:
+      matrix:
+        package_platform: [Linux_32bit, Linux_ARMv6, Linux_ARMv7, Linux_ARM64]
+        include:
+          - package_platform: Linux_32bit
+            docker_image: i386/python:3.7-buster
+          - package_platform: Linux_ARMv6
+            docker_image: arm32v5/python:3.7-buster # buster is not available for arm32v6, but should be backward compatible
+          - package_platform: Linux_ARMv7
+            docker_image: arm32v7/python:3.7-buster
+          - package_platform: Linux_ARM64
+            docker_image: arm64v8/python:3.7-buster
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout mcuboot repository
+        uses: actions/checkout@v2
+        with:
+          repository: mcu-tools/mcuboot
+          path: ${{ env.MCUBOOT_PATH }}
+          ref: v1.8.0 # the patches apply only to this version
+
+      - name: Checkout imgtool-packing repository
+        uses: actions/checkout@v2
+        with:
+          path: ${{ env.IMGTOOL_PACKING_PATH }}
+
+      - name: Apply patches
+        working-directory: ${{ env.MCUBOOT_PATH }}/scripts/
+        run: git apply -v "${{ env.IMGTOOL_PACKING_PATH }}/patches/"*
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        with:
+          image: tonistiigi/binfmt:latest
+          platforms: all
+      
+      - name: Copy build script
+        working-directory: ${{ env.IMGTOOL_PACKING_PATH }}
+        run: cp build.sh ${{ env.MCUBOOT_PATH }}/scripts/imgtool/
+
+      # Docker containers used to crosscompile:
+      # https://github.com/docker-library/official-images#architectures-other-than-amd64
+      - name: Build
+        working-directory: ${{ env.MCUBOOT_PATH }}/scripts
+        run: docker run -v "$(pwd)":/workspace ${{ matrix.docker_image }} ./workspace/imgtool/build.sh
+
+      - name: Smoke test build
+        working-directory: ${{ env.MCUBOOT_PATH }}/scripts
+        run: docker run -v "$(pwd)":/workspace ${{ matrix.docker_image }} ./workspace/dist/imgtool
+
+      - name: Package
+        working-directory: ${{ env.MCUBOOT_PATH }}/scripts/${{ env.DIST_DIR }}
+        run: sudo tar -cz -C ./ ${{ env.PROJECT_NAME }} -C ${{ env.IMGTOOL_PACKING_PATH }} LICENSE.txt -f ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.tar.gz #dist dir is created in the container with different user/grp
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          if-no-files-found: error
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.MCUBOOT_PATH }}/scripts/dist/${{ env.PROJECT_NAME }}_*
+
+  create-release:
+    runs-on: ubuntu-latest
+    needs: [build, build-crosscompile]
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.DIST_DIR }}
+
+      - name: Create Github Release and upload artifacts
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          draft: false
+          artifacts: ${{ env.DIST_DIR }}/*
+
+      - name: Upload release files on Arduino downloads servers
+        uses: docker://plugins/s3
+        env:
+          PLUGIN_SOURCE: "${{ env.DIST_DIR }}/*"
+          PLUGIN_TARGET: ${{ env.AWS_PLUGIN_TARGET }}
+          PLUGIN_STRIP_PREFIX: "${{ env.DIST_DIR }}/"
+          PLUGIN_BUCKET: ${{ secrets.DOWNLOADS_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

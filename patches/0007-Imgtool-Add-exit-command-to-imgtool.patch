@@ -1,0 +1,36 @@
+From 84e529edcbb1eb41c0fc3ed6ab375027d11c4dc8 Mon Sep 17 00:00:00 2001
+From: pennam <m.pennasilico@arduino.cc>
+Date: Mon, 18 Oct 2021 09:40:56 +0200
+Subject: [PATCH] Imgtool: Add exit command to imgtool
+
+---
+ scripts/imgtool/main.py | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/scripts/imgtool/main.py b/scripts/imgtool/main.py
+index 49e3db8..52d348f 100755
+--- a/scripts/imgtool/main.py
++++ b/scripts/imgtool/main.py
+@@ -381,6 +381,11 @@ def version():
+     print(imgtool_version)
+ 
+ 
++@click.command(help='Exit imgtool')
++def exit():
++    print("")
++
++
+ @click.command(cls=AliasesGroup,
+                context_settings=dict(help_option_names=['-h', '--help']))
+ def imgtool():
+@@ -393,6 +398,7 @@ imgtool.add_command(getpriv)
+ imgtool.add_command(verify)
+ imgtool.add_command(sign)
+ imgtool.add_command(version)
++imgtool.add_command(exit)
+ 
+ 
+ if __name__ == '__main__':
+-- 
+2.35.1
+

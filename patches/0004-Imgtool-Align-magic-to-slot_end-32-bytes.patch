@@ -1,0 +1,29 @@
+From ecf32cb4b0227b5f173dd0bbab3351e4adabe3b9 Mon Sep 17 00:00:00 2001
+From: pennam <m.pennasilico@arduino.cc>
+Date: Mon, 13 Sep 2021 16:45:59 +0200
+Subject: [PATCH] Imgtool: Align magic to slot_end - 32 bytes
+
+---
+ scripts/imgtool/image.py | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/scripts/imgtool/image.py b/scripts/imgtool/image.py
+index 65e194d..89edded 100644
+--- a/scripts/imgtool/image.py
++++ b/scripts/imgtool/image.py
+@@ -85,7 +85,11 @@ boot_magic = bytes([
+     0x77, 0xc2, 0x95, 0xf3,
+     0x60, 0xd2, 0xef, 0x7f,
+     0x35, 0x52, 0x50, 0x0f,
+-    0x2c, 0xb6, 0x79, 0x80, ])
++    0x2c, 0xb6, 0x79, 0x80,
++    0xff, 0xff, 0xff, 0xff,
++    0xff, 0xff, 0xff, 0xff,
++    0xff, 0xff, 0xff, 0xff,
++    0xff, 0xff, 0xff, 0xff, ])
+ 
+ STRUCT_ENDIAN_DICT = {
+         'little': '<',
+-- 
+2.35.1
+

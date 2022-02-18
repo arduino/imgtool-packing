@@ -1,0 +1,52 @@
+From 2a8138e2895085469dbf3c759f1b84f271e98275 Mon Sep 17 00:00:00 2001
+From: Kristine Jassmann <kristine.jassmann@renesas.com>
+Date: Wed, 24 Feb 2021 01:11:39 +0000
+Subject: [PATCH] Imgtool: Fixed default and made max-align consistent
+ with other options. Adding required sign-off.
+
+Signed-off-by: Kristine Jassmann <kristine.jassmann@renesas.com>
+---
+ scripts/imgtool/image.py | 2 +-
+ scripts/imgtool/main.py  | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/scripts/imgtool/image.py b/scripts/imgtool/image.py
+index 6bfed0d..89c5e82 100644
+--- a/scripts/imgtool/image.py
++++ b/scripts/imgtool/image.py
+@@ -158,7 +158,7 @@ class Image():
+         self.enckey = None
+         self.save_enctlv = save_enctlv
+         self.enctlv_len = 0
+-        self.max_align = int(max_align)
++        self.max_align = DEFAULT_MAX_ALIGN if max_align is None else int(max_align)
+ 
+         if security_counter == 'auto':
+             # Security counter has not been explicitly provided,
+diff --git a/scripts/imgtool/main.py b/scripts/imgtool/main.py
+index 0f21306..49e3db8 100755
+--- a/scripts/imgtool/main.py
++++ b/scripts/imgtool/main.py
+@@ -291,6 +291,9 @@ class BasedIntParamType(click.ParamType):
+ @click.option('--align', type=click.Choice(['1', '2', '4', '8', '16', '32',
+               '64', '128', '256', '512', '1024', '2048', '4096']),
+               required=True)
++@click.option('--max-align', type=click.Choice(['1', '2', '4', '8', '16', '32',
++              '64', '128', '256', '512', '1024', '2048', '4096']),
++              required=False)
+ @click.option('--public-key-format', type=click.Choice(['hash', 'full']),
+               default='hash', help='In what format to add the public key to '
+               'the image manifest: full key or hash of the key.')
+@@ -298,9 +301,6 @@ class BasedIntParamType(click.ParamType):
+ @click.command(help='''Create a signed or unsigned image\n
+                INFILE and OUTFILE are parsed as Intel HEX if the params have
+                .hex extension, otherwise binary format is used''')
+-@click.option('--max_align', type=click.Choice(['1', '2', '4', '8', '16', '32',
+-              '64', '128', '256', '512', '1024', '2048', '4096']),
+-              default=8)
+ def sign(key, public_key_format, align, version, pad_sig, header_size,
+          pad_header, slot_size, pad, confirm, max_sectors, overwrite_only,
+          endian, encrypt_keylen, encrypt, infile, outfile, dependencies,
+-- 
+2.35.1
+
