@@ -45,14 +45,14 @@ jobs:
 
     steps:
       - name: Checkout mcuboot repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: mcu-tools/mcuboot
           path: ${{ env.MCUBOOT_PATH }}
           ref: v1.8.0 # the patches apply only to this version
 
       - name: Checkout imgtool-packing repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: ${{ env.IMGTOOL_PACKING_PATH }}
 
@@ -123,14 +123,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout mcuboot repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: mcu-tools/mcuboot
           path: ${{ env.MCUBOOT_PATH }}
           ref: v1.8.0 # the patches apply only to this version
 
       - name: Checkout imgtool-packing repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: ${{ env.IMGTOOL_PACKING_PATH }}
 
