@@ -1,5 +1,7 @@
 # imgtool-packing
 
+[![Sync Labels status](https://github.com/arduino/imgtool-packing/actions/workflows/sync-labels.yml/badge.svg)](https://github.com/arduino/imgtool-packing/actions/workflows/sync-labels.yml)
+
 This repo does not contain the source code, but only the patches, and the release workflow
 
 ## Sources
