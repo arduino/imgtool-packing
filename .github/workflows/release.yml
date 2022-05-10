@@ -12,7 +12,6 @@ env:
   MCUBOOT_PATH: ${{ github.workspace }}/mcuboot
   IMGTOOL_PACKING_PATH: ${{ github.workspace }}/imgtool-packing
 
-
 on:
   push:
     tags:
@@ -84,19 +83,19 @@ jobs:
         if: matrix.os == 'windows-latest'
         working-directory: ${{ env.MCUBOOT_PATH }}/scripts/${{ env.DIST_DIR }}
         run: | # we need to create the subdir where to place binaries
-          mkdir ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}
-          mv -v ./${{ env.PROJECT_NAME }}.exe ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}
-          mv -v "${{ env.IMGTOOL_PACKING_PATH }}/LICENSE.txt" ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}
-          7z a ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.zip ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}
+          mkdir ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
+          mv -v ./${{ env.PROJECT_NAME }}.exe ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
+          mv -v "${{ env.IMGTOOL_PACKING_PATH }}/LICENSE.txt" ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
+          7z a ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.zip ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
           
       - name: Package
         if: matrix.os != 'windows-latest'
         working-directory: ${{ env.MCUBOOT_PATH }}/scripts/${{ env.DIST_DIR }}
         run: | # we need to create the subdir where to place binaries
-          mkdir ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}
-          mv -v ./${{ env.PROJECT_NAME }} ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}
-          mv -v ${{ env.IMGTOOL_PACKING_PATH }}/LICENSE.txt ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}
-          ${{ matrix.archive_util }} -cz ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }} -f ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.tar.gz
+          mkdir ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
+          mv -v ./${{ env.PROJECT_NAME }} ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
+          mv -v ${{ env.IMGTOOL_PACKING_PATH }}/LICENSE.txt ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
+          ${{ matrix.archive_util }} -cz ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }} -f ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.tar.gz
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
@@ -161,10 +160,10 @@ jobs:
       - name: Package
         working-directory: ${{ env.MCUBOOT_PATH }}/scripts/${{ env.DIST_DIR }}
         run: | # we need to create the subdir where to place binaries
-          sudo mkdir ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}
-          sudo mv -v ./${{ env.PROJECT_NAME }} ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}
-          sudo mv -v ${{ env.IMGTOOL_PACKING_PATH }}/LICENSE.txt ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}
-          sudo tar -cz ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }} -f ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.tar.gz #dist dir is created in the container with different user/grp
+          sudo mkdir ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
+          sudo mv -v ./${{ env.PROJECT_NAME }} ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
+          sudo mv -v ${{ env.IMGTOOL_PACKING_PATH }}/LICENSE.txt ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
+          sudo tar -cz ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }} -f ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.tar.gz #dist dir is created in the container with different user/grp
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
