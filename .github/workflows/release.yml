@@ -73,7 +73,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Install pyinstaller
-        run: pip install pyinstaller
+        run: pip install pyinstaller==5.0.1
 
       - name: Build
         working-directory: ${{ env.MCUBOOT_PATH }}/scripts/
