@@ -5,6 +5,7 @@ bundle_id = "cc.arduino.imgtool"
 
 sign {
   application_identity = "Developer ID Application: ARDUINO SA (7KT7ZWMCJT)"
+  entitlements_file = "entitlements.plist"
 }
 
 # Ask Gon for zip output to force notarization process to take place.

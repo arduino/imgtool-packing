@@ -76,8 +76,14 @@ jobs:
         run: pip install pyinstaller==5.0.1
 
       - name: Build
+        if: matrix.os != 'macos-10.15'
         working-directory: ${{ env.MCUBOOT_PATH }}/scripts/
         run: pyinstaller --onefile main.py -n ${{ env.PROJECT_NAME }}
+
+      - name: Build macOS
+        if: matrix.os == 'macos-10.15'
+        working-directory: ${{ env.MCUBOOT_PATH }}/scripts/
+        run: pyinstaller --osx-entitlements-file ${{ env.IMGTOOL_PACKING_PATH }}/entitlements.plist --onefile main.py -n ${{ env.PROJECT_NAME }}
 
       - name: Package
         if: matrix.os == 'windows-latest'
