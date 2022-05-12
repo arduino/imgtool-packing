@@ -76,17 +76,17 @@ jobs:
         run: pip install pyinstaller==5.0.1
 
       - name: Build
-        if: matrix.os != 'macos-10.15'
+        if: runner.os != 'macOS'
         working-directory: ${{ env.MCUBOOT_PATH }}/scripts/
         run: pyinstaller --onefile main.py -n ${{ env.PROJECT_NAME }}
 
       - name: Build macOS
-        if: matrix.os == 'macos-10.15'
+        if: runner.os == 'macOS'
         working-directory: ${{ env.MCUBOOT_PATH }}/scripts/
         run: pyinstaller --osx-entitlements-file ${{ env.IMGTOOL_PACKING_PATH }}/entitlements.plist --onefile main.py -n ${{ env.PROJECT_NAME }}
 
       - name: Package
-        if: matrix.os == 'windows-latest'
+        if: runner.os == 'Windows'
         working-directory: ${{ env.MCUBOOT_PATH }}/scripts/${{ env.DIST_DIR }}
         run: | # we need to create the subdir where to place binaries
           mkdir ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
@@ -95,7 +95,7 @@ jobs:
           7z a ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.zip ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
           
       - name: Package
-        if: matrix.os != 'windows-latest'
+        if: runner.os != 'Windows'
         working-directory: ${{ env.MCUBOOT_PATH }}/scripts/${{ env.DIST_DIR }}
         run: | # we need to create the subdir where to place binaries
           mkdir ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
