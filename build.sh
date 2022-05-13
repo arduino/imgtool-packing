@@ -5,7 +5,7 @@ apt-get install -y upx
 python -m pip install --upgrade pip setuptools wheel
 cd workspace/
 pip install -r requirements.txt
-pip install pyinstaller==4.2
+pip install pyinstaller==5.0.1
 echo "
 ---
 Available PyInstaller bootloaders:"
