@@ -58,11 +58,11 @@ jobs:
         
       - name: Set the version
         working-directory: ${{ env.IMGTOOL_PACKING_PATH }}/patches/
-        run: sed -i "s/ARDUINO_VERSION_PLACEHOLDER/${GITHUB_REF/refs\/tags\//}/" 0008-Imgtool-Append-arduino-to-version-string.patch
+        run: perl -pi -e "s/ARDUINO_VERSION_PLACEHOLDER/${GITHUB_REF/refs\/tags\//}/g" 0008-Imgtool-Append-arduino-to-version-string.patch
 
       - name: Apply patches
         working-directory: ${{ env.MCUBOOT_PATH }}/scripts/
-        run: git apply -v "${{ env.IMGTOOL_PACKING_PATH }}/patches/"*
+        run: git apply -v "${{ env.IMGTOOL_PACKING_PATH }}/patches/"*.patch
 
       - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v3
@@ -140,11 +140,11 @@ jobs:
 
       - name: Set the version
         working-directory: ${{ env.IMGTOOL_PACKING_PATH }}/patches/
-        run: sed -i "s/ARDUINO_VERSION_PLACEHOLDER/${GITHUB_REF/refs\/tags\//}/" 0008-Imgtool-Append-arduino-to-version-string.patch
+        run: perl -pi -e "s/ARDUINO_VERSION_PLACEHOLDER/${GITHUB_REF/refs\/tags\//}/g" 0008-Imgtool-Append-arduino-to-version-string.patch
 
       - name: Apply patches
         working-directory: ${{ env.MCUBOOT_PATH }}/scripts/
-        run: git apply -v "${{ env.IMGTOOL_PACKING_PATH }}/patches/"*
+        run: git apply -v "${{ env.IMGTOOL_PACKING_PATH }}/patches/"*.patch
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
