@@ -114,14 +114,12 @@ jobs:
     name: build (${{ matrix.package_platform }})
     strategy:
       matrix:
-        package_platform: [Linux_32bit, Linux_ARMv6, Linux_ARMv7, Linux_ARM64]
+        package_platform: [Linux_32bit, Linux_ARMv6, Linux_ARM64]
         include:
           - package_platform: Linux_32bit
             docker_image: i386/python:3.7-buster
           - package_platform: Linux_ARMv6
             docker_image: arm32v5/python:3.7-buster # buster is not available for arm32v6, but should be backward compatible
-          - package_platform: Linux_ARMv7
-            docker_image: arm32v7/python:3.7-buster
           - package_platform: Linux_ARM64
             docker_image: arm64v8/python:3.7-buster
 
