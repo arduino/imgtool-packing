@@ -99,6 +99,7 @@ jobs:
         working-directory: ${{ env.MCUBOOT_PATH }}/scripts/${{ env.DIST_DIR }}
         run: | # we need to create the subdir where to place binaries
           mkdir ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
+          chmod +x ./${{ env.PROJECT_NAME }}
           mv -v ./${{ env.PROJECT_NAME }} ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
           mv -v ${{ env.IMGTOOL_PACKING_PATH }}/LICENSE.txt ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
           ${{ matrix.archive_util }} -cz ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }} -f ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.tar.gz
@@ -165,6 +166,7 @@ jobs:
         working-directory: ${{ env.MCUBOOT_PATH }}/scripts/${{ env.DIST_DIR }}
         run: | # we need to create the subdir where to place binaries
           sudo mkdir ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
+          sudo chmod +x ./${{ env.PROJECT_NAME }}
           sudo mv -v ./${{ env.PROJECT_NAME }} ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
           sudo mv -v ${{ env.IMGTOOL_PACKING_PATH }}/LICENSE.txt ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
           sudo tar -cz ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }} -f ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.tar.gz #dist dir is created in the container with different user/grp
@@ -249,6 +251,9 @@ jobs:
     needs: [build, build-crosscompile, notarize-macos]
 
     steps:
+      - name: Checkout repository # we need package_index.template
+        uses: actions/checkout@v2
+
       - name: Download artifact
         uses: actions/download-artifact@v3
         with:
@@ -264,6 +269,32 @@ jobs:
           unzip -p /tmp/3.2.0.zip semver-tool-3.2.0/src/semver >/tmp/semver && chmod +x /tmp/semver
           if [[ "$(/tmp/semver get prerel "${GITHUB_REF/refs\/tags\//}")" ]]; then echo "::set-output name=IS_PRE::true"; fi
 
+      - name: Prepare artifacts for the release and handle package_index
+        run: |
+          package_index=`cat package_index.template | sed s/%%VERSION%%/${GITHUB_REF/refs\/tags\//}/`
+          declare -a target_folders=("Windows_32bit" "Windows_64bit" "Linux_64bit" "macOS_64bit" "Linux_32bit" "Linux_ARMv6" "Linux_ARM64")
+          cd dist
+          for folder in "${target_folders[@]}"
+          do
+            if [[ $folder = "Windows_32bit" || $folder = "Windows_64bit" ]]; then
+              ARCHIVE_NAME=${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${folder}.zip
+            else
+              ARCHIVE_NAME=${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${folder}.tar.gz
+            fi
+            T_OS=`echo ${folder} | awk '{print toupper($0)}'`
+            SHASUM=`sha256sum ${ARCHIVE_NAME} | cut -f1 -d" "`
+            SIZE=`stat --printf="%s" ${ARCHIVE_NAME}`
+            package_index=`echo $package_index |
+              sed s/%%FILENAME_${T_OS}%%/${ARCHIVE_NAME}/ |
+              sed s/%%FILENAME_${T_OS}%%/${ARCHIVE_NAME}/ |
+              sed s/%%SIZE_${T_OS}%%/${SIZE}/ |
+              sed s/%%SHA_${T_OS}%%/${SHASUM}/`
+          done
+          cd ..
+          echo ================== CUT ME HERE =====================
+          echo ${package_index}
+          echo ${package_index} > dist/package_index_draft.json
+      
       - name: Create Github Release and upload artifacts
         uses: ncipollo/release-action@v1
         with:

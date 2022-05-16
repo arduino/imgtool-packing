@@ -1,0 +1,55 @@
+        {
+          "name": "imgtool",
+          "version": "%%VERSION%%",
+          "systems": [
+            {
+              "host": "i386-apple-darwin11",
+              "url": "http://downloads.arduino.cc/tools/%%FILENAME_MACOS_64BIT%%",
+              "archiveFileName": "%%FILENAME_MACOS_64BIT%%",
+              "size": "%%SIZE_MACOS_64BIT%%",
+              "checksum": "SHA-256:%%SHA_MACOS_64BIT%%"
+            },
+            {
+              "host": "arm-linux-gnueabihf",
+              "url": "http://downloads.arduino.cc/tools/%%FILENAME_LINUX_ARMV6%%",
+              "archiveFileName": "%%FILENAME_LINUX_ARMV6%%",
+              "size": "%%SIZE_LINUX_ARMV6%%",
+              "checksum": "SHA-256:%%SHA_LINUX_ARMV6%%"
+            },
+            {
+              "host": "aarch64-linux-gnu",
+              "url": "http://downloads.arduino.cc/tools/%%FILENAME_LINUX_ARM64%%",
+              "archiveFileName": "%%FILENAME_LINUX_ARM64%%",
+              "size": "%%SIZE_LINUX_ARM64%%",
+              "checksum": "SHA-256:%%SHA_LINUX_ARM64%%"
+            },
+            {
+              "host": "x86_64-linux-gnu",
+              "url": "http://downloads.arduino.cc/tools/%%FILENAME_LINUX_64BIT%%",
+              "archiveFileName": "%%FILENAME_LINUX_64BIT%%",
+              "size": "%%SIZE_LINUX_64BIT%%",
+              "checksum": "SHA-256:%%SHA_LINUX_64BIT%%"
+            },
+            {
+              "host": "i686-linux-gnu",
+              "url": "http://downloads.arduino.cc/tools/%%FILENAME_LINUX_32BIT%%",
+              "archiveFileName": "%%FILENAME_LINUX_32BIT%%",
+              "size": "%%SIZE_LINUX_32BIT%%",
+              "checksum": "SHA-256:%%SHA_LINUX_32BIT%%"
+            },
+            {
+              "host": "i686-mingw32",
+              "url": "http://downloads.arduino.cc/tools/%%FILENAME_WINDOWS_32BIT%%",
+              "archiveFileName": "%%FILENAME_WINDOWS_32BIT%%",
+              "size": "%%SIZE_WINDOWS_32BIT%%",
+              "checksum": "SHA-256:%%SHA_WINDOWS_32BIT%%"
+            },
+            {
+              "host": "x86_64-mingw32",
+              "url": "http://downloads.arduino.cc/tools/%%FILENAME_WINDOWS_64BIT%%",
+              "archiveFileName": "%%FILENAME_WINDOWS_64BIT%%",
+              "size": "%%SIZE_WINDOWS_64BIT%%",
+              "checksum": "SHA-256:%%SHA_WINDOWS_64BIT%%"
+            }
+          ]
+        }
