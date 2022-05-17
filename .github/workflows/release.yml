@@ -292,8 +292,8 @@ jobs:
           done
           cd ..
           echo ================== CUT ME HERE =====================
-          echo ${package_index}
-          echo ${package_index} > dist/package_index_draft.json
+          echo "${package_index}"
+          echo "${package_index}" > dist/package_index_draft.json
       
       - name: Create Github Release and upload artifacts
         uses: ncipollo/release-action@v1
