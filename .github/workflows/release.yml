@@ -292,7 +292,7 @@ jobs:
             T_OS=`echo ${folder} | awk '{print toupper($0)}'`
             SHASUM=`sha256sum ${ARCHIVE_NAME} | cut -f1 -d" "`
             SIZE=`stat --printf="%s" ${ARCHIVE_NAME}`
-            package_index=`echo $package_index |
+            package_index=`echo "$package_index" |
               sed s/%%FILENAME_${T_OS}%%/${ARCHIVE_NAME}/ |
               sed s/%%FILENAME_${T_OS}%%/${ARCHIVE_NAME}/ |
               sed s/%%SIZE_${T_OS}%%/${SIZE}/ |
