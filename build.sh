@@ -3,7 +3,7 @@
 apt-get update
 apt-get install -y upx
 python -m pip install --upgrade pip setuptools wheel
-cd workspace/
+cd workspace/ || exit
 pip install -r requirements.txt
 pip install pyinstaller==5.0.1
 echo "
