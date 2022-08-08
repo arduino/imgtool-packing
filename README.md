@@ -4,6 +4,7 @@
 [![Check Markdown status](https://github.com/arduino/imgtool-packing/actions/workflows/check-markdown-task.yml/badge.svg)](https://github.com/arduino/imgtool-packing/actions/workflows/check-markdown-task.yml)
 [![Check License status](https://github.com/arduino/imgtool-packing/actions/workflows/check-license.yml/badge.svg)](https://github.com/arduino/imgtool-packing/actions/workflows/check-license.yml)
 [![Check Taskfiles status](https://github.com/arduino/imgtool-packing/actions/workflows/check-taskfiles.yml/badge.svg)](https://github.com/arduino/imgtool-packing/actions/workflows/check-taskfiles.yml)
+[![Check Workflows status](https://github.com/arduino/imgtool-packing/actions/workflows/check-workflows-task.yml/badge.svg)](https://github.com/arduino/imgtool-packing/actions/workflows/check-workflows-task.yml)
 
 This repo does not contain the source code, but only the patches, and the release workflow
 
