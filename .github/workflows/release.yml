@@ -22,7 +22,7 @@ jobs:
     name: build (${{ matrix.package_platform }})
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-18.04, macos-10.15]
+        os: [windows-latest, ubuntu-latest, macos-latest]
         python_arch: [x64]
         include:
           - os: windows-latest
@@ -30,10 +30,10 @@ jobs:
             python_arch: x86
           - os: windows-latest
             package_platform: Windows_64bit
-          - os: ubuntu-18.04
+          - os: ubuntu-latest
             package_platform: Linux_64bit
             archive_util: tar
-          - os: macos-10.15
+          - os: macos-latest
             package_platform: macOS_64bit
             archive_util: gtar # https://github.com/actions/virtual-environments/issues/2619
     defaults:
