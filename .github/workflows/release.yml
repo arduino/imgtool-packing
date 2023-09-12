@@ -151,7 +151,7 @@ jobs:
         run: git apply -v "${{ env.IMGTOOL_PACKING_PATH }}/patches/"*.patch
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
         with:
           image: tonistiigi/binfmt:latest
           platforms: all
