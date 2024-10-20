@@ -4,7 +4,7 @@ env:
   # The name of the project
   PROJECT_NAME: imgtool
   DIST_DIR: dist
-  ARTIFACT_NAME: dist
+  ARTIFACT_PREFIX: dist-
   # The project's folder on Arduino's download server for uploading builds
   AWS_PLUGIN_TARGET: /tools/
   # See: https://github.com/actions/setup-python/tree/main#available-versions-of-python
@@ -112,7 +112,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
-          name: ${{ env.ARTIFACT_NAME }}
+          name: ${{ env.ARTIFACT_PREFIX }}${{ matrix.package_platform }}
           path: ${{ env.MCUBOOT_PATH }}/scripts/dist/${{ env.PROJECT_NAME }}_*
 
   build-crosscompile:
@@ -183,22 +183,30 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
-          name: ${{ env.ARTIFACT_NAME }}
+          name: ${{ env.ARTIFACT_PREFIX }}${{ matrix.package_platform }}
           path: ${{ env.MCUBOOT_PATH }}/scripts/dist/${{ env.PROJECT_NAME }}_*
 
   notarize-macos:
     runs-on: macos-latest
     needs: build
 
+    env:
+      ARTIFACT_SUFFIX: macOS_64bit
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download artifacts
+      - name: Download non-notarized artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}
+          name: ${{ env.ARTIFACT_PREFIX }}${{ env.ARTIFACT_SUFFIX }}
           path: ${{ env.DIST_DIR }}
+
+      - name: Remove non-notarized artifact
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: ${{ env.ARTIFACT_PREFIX }}${{ env.ARTIFACT_SUFFIX }}
 
       - name: Import Code-Signing Certificates
         env:
@@ -248,11 +256,11 @@ jobs:
           PACKAGE_FILENAME="${{ env.PROJECT_NAME }}_${TAG}_macOS_64bit.tar.gz"
           tar -czvf "${PACKAGE_FILENAME}" "${{ env.PROJECT_NAME }}_macOS_64bit"
 
-      - name: Upload artifacts
+      - name: Upload notarized artifact
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
-          name: ${{ env.ARTIFACT_NAME }}
+          name: ${{ env.ARTIFACT_PREFIX }}${{ env.ARTIFACT_SUFFIX }}
           path: ${{ env.DIST_DIR }}
 
   create-release:
@@ -266,8 +274,9 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}
+          merge-multiple: true
           path: ${{ env.DIST_DIR }}
+          pattern: ${{ env.ARTIFACT_PREFIX }}*
 
       - name: Identify Prerelease
         # This is a workaround while waiting for create-release action
