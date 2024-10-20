@@ -39,7 +39,7 @@ jobs:
     defaults:
       run:
         shell: bash
-  
+
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -54,7 +54,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: ${{ env.IMGTOOL_PACKING_PATH }}
-        
+
       - name: Set the version
         working-directory: ${{ env.IMGTOOL_PACKING_PATH }}/patches/
         run: perl -pi -e "s/ARDUINO_VERSION_PLACEHOLDER/${GITHUB_REF/refs\/tags\//}/g" 0008-Imgtool-Append-arduino-to-version-string.patch
@@ -97,7 +97,7 @@ jobs:
           mv -v ./${{ env.PROJECT_NAME }}.exe ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
           mv -v "${{ env.IMGTOOL_PACKING_PATH }}/LICENSE.txt" ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
           7z a ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.zip ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
-          
+
       - name: Package
         if: runner.os != 'Windows'
         working-directory: ${{ env.MCUBOOT_PATH }}/scripts/${{ env.DIST_DIR }}
@@ -155,7 +155,7 @@ jobs:
         with:
           image: tonistiigi/binfmt:latest
           platforms: all
-      
+
       - name: Copy build script
         working-directory: ${{ env.IMGTOOL_PACKING_PATH }}
         run: cp build.sh ${{ env.MCUBOOT_PATH }}/scripts/imgtool/
@@ -254,7 +254,7 @@ jobs:
           if-no-files-found: error
           name: ${{ env.ARTIFACT_NAME }}
           path: ${{ env.DIST_DIR }}
-  
+
   create-release:
     runs-on: ubuntu-latest
     needs: [build, build-crosscompile, notarize-macos]
@@ -303,7 +303,7 @@ jobs:
           echo ================== CUT ME HERE =====================
           echo "${package_index}"
           echo "${package_index}" > dist/package_index_draft.json
-      
+
       - name: Create Github Release and upload artifacts
         uses: ncipollo/release-action@v1
         with:
