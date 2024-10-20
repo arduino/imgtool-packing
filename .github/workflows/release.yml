@@ -4,7 +4,7 @@ env:
   # The name of the project
   PROJECT_NAME: imgtool
   DIST_DIR: dist
-  ARTIFACT_NAME: dist
+  ARTIFACT_PREFIX: dist-
   # The project's folder on Arduino's download server for uploading builds
   AWS_PLUGIN_TARGET: /tools/
   # See: https://github.com/actions/setup-python/tree/main#available-versions-of-python
@@ -39,7 +39,7 @@ jobs:
     defaults:
       run:
         shell: bash
-  
+
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -54,7 +54,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: ${{ env.IMGTOOL_PACKING_PATH }}
-        
+
       - name: Set the version
         working-directory: ${{ env.IMGTOOL_PACKING_PATH }}/patches/
         run: perl -pi -e "s/ARDUINO_VERSION_PLACEHOLDER/${GITHUB_REF/refs\/tags\//}/g" 0008-Imgtool-Append-arduino-to-version-string.patch
@@ -97,7 +97,7 @@ jobs:
           mv -v ./${{ env.PROJECT_NAME }}.exe ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
           mv -v "${{ env.IMGTOOL_PACKING_PATH }}/LICENSE.txt" ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
           7z a ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.zip ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }}
-          
+
       - name: Package
         if: runner.os != 'Windows'
         working-directory: ${{ env.MCUBOOT_PATH }}/scripts/${{ env.DIST_DIR }}
@@ -109,10 +109,10 @@ jobs:
           ${{ matrix.archive_util }} -cz ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }} -f ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.tar.gz
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
-          name: ${{ env.ARTIFACT_NAME }}
+          name: ${{ env.ARTIFACT_PREFIX }}${{ matrix.package_platform }}
           path: ${{ env.MCUBOOT_PATH }}/scripts/dist/${{ env.PROJECT_NAME }}_*
 
   build-crosscompile:
@@ -155,7 +155,7 @@ jobs:
         with:
           image: tonistiigi/binfmt:latest
           platforms: all
-      
+
       - name: Copy build script
         working-directory: ${{ env.IMGTOOL_PACKING_PATH }}
         run: cp build.sh ${{ env.MCUBOOT_PATH }}/scripts/imgtool/
@@ -180,25 +180,33 @@ jobs:
           sudo tar -cz ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }} -f ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.tar.gz #dist dir is created in the container with different user/grp
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
-          name: ${{ env.ARTIFACT_NAME }}
+          name: ${{ env.ARTIFACT_PREFIX }}${{ matrix.package_platform }}
           path: ${{ env.MCUBOOT_PATH }}/scripts/dist/${{ env.PROJECT_NAME }}_*
 
   notarize-macos:
     runs-on: macos-latest
     needs: build
 
+    env:
+      ARTIFACT_SUFFIX: macOS_64bit
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download artifacts
-        uses: actions/download-artifact@v3
+      - name: Download non-notarized artifact
+        uses: actions/download-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}
+          name: ${{ env.ARTIFACT_PREFIX }}${{ env.ARTIFACT_SUFFIX }}
           path: ${{ env.DIST_DIR }}
+
+      - name: Remove non-notarized artifact
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: ${{ env.ARTIFACT_PREFIX }}${{ env.ARTIFACT_SUFFIX }}
 
       - name: Import Code-Signing Certificates
         env:
@@ -248,13 +256,13 @@ jobs:
           PACKAGE_FILENAME="${{ env.PROJECT_NAME }}_${TAG}_macOS_64bit.tar.gz"
           tar -czvf "${PACKAGE_FILENAME}" "${{ env.PROJECT_NAME }}_macOS_64bit"
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+      - name: Upload notarized artifact
+        uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
-          name: ${{ env.ARTIFACT_NAME }}
+          name: ${{ env.ARTIFACT_PREFIX }}${{ env.ARTIFACT_SUFFIX }}
           path: ${{ env.DIST_DIR }}
-  
+
   create-release:
     runs-on: ubuntu-latest
     needs: [build, build-crosscompile, notarize-macos]
@@ -264,10 +272,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}
+          merge-multiple: true
           path: ${{ env.DIST_DIR }}
+          pattern: ${{ env.ARTIFACT_PREFIX }}*
 
       - name: Identify Prerelease
         # This is a workaround while waiting for create-release action
@@ -303,7 +312,7 @@ jobs:
           echo ================== CUT ME HERE =====================
           echo "${package_index}"
           echo "${package_index}" > dist/package_index_draft.json
-      
+
       - name: Create Github Release and upload artifacts
         uses: ncipollo/release-action@v1
         with:
