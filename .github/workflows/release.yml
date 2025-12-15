@@ -110,7 +110,7 @@ jobs:
           ${{ matrix.archive_util }} -cz ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }} -f ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.tar.gz
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           if-no-files-found: error
           name: ${{ env.ARTIFACT_PREFIX }}${{ matrix.package_platform }}
@@ -181,7 +181,7 @@ jobs:
           sudo tar -cz ${{ env.PROJECT_NAME }}_${{ matrix.package_platform }} -f ${{ env.PROJECT_NAME }}_${GITHUB_REF/refs\/tags\//}_${{ matrix.package_platform }}.tar.gz #dist dir is created in the container with different user/grp
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           if-no-files-found: error
           name: ${{ env.ARTIFACT_PREFIX }}${{ matrix.package_platform }}
@@ -258,7 +258,7 @@ jobs:
           tar -czvf "${PACKAGE_FILENAME}" "${{ env.PROJECT_NAME }}_macOS_64bit"
 
       - name: Upload notarized artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           if-no-files-found: error
           name: ${{ env.ARTIFACT_PREFIX }}${{ env.ARTIFACT_SUFFIX }}
